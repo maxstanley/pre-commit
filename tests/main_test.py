@@ -16,7 +16,7 @@ from testing.util import cwd
 
 def _args(**kwargs):
     kwargs.setdefault('command', 'help')
-    kwargs.setdefault('config', C.CONFIG_FILE)
+    kwargs.setdefault('config', [C.CONFIG_FILE])
     if kwargs['command'] in {'run', 'try-repo'}:
         kwargs.setdefault('commit_msg_filename', None)
     return argparse.Namespace(**kwargs)
@@ -38,7 +38,7 @@ def test_adjust_args_and_chdir_noop(in_git_dir):
 def test_adjust_args_and_chdir_relative_things(in_git_dir):
     in_git_dir.join('foo/cfg.yaml').ensure()
     with in_git_dir.join('foo').as_cwd():
-        args = _args(command='run', files=['f1', 'f2'], config='cfg.yaml')
+        args = _args(command='run', files=['f1', 'f2'], config=['cfg.yaml'])
         main._adjust_args_and_chdir(args)
         assert os.getcwd() == in_git_dir
         assert args.config == os.path.join('foo', 'cfg.yaml')

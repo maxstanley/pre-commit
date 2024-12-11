@@ -48,8 +48,8 @@ COMMANDS_NO_GIT = {
 
 def _add_config_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        '-c', '--config', default=C.CONFIG_FILE,
-        help='Path to alternate config file',
+        '-c', '--config', default=C.CONFIG_FILE_SEARCH, nargs=1,
+        help='Path to alternate config file location',
     )
 
 
@@ -169,8 +169,14 @@ def _add_run_options(parser: argparse.ArgumentParser) -> None:
 
 def _adjust_args_and_chdir(args: argparse.Namespace) -> None:
     # `--config` was specified relative to the non-root working directory
-    if os.path.exists(args.config):
-        args.config = os.path.abspath(args.config)
+    for config_path in args.config:
+        if os.path.exists(config_path):
+            args.config = os.path.abspath(config_path)
+            break
+    else:
+        args.config = C.CONFIG_FILE
+        if os.path.exists(args.config):
+            args.config = os.path.abspath(args.config)
     if args.command in {'run', 'try-repo'}:
         args.files = [os.path.abspath(filename) for filename in args.files]
         if args.commit_msg_filename is not None:

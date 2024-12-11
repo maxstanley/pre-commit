@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import logging
 import os.path
+import pathlib
 import re
 import shlex
 import sys
@@ -492,9 +493,27 @@ class InvalidConfigError(FatalError):
     pass
 
 
-load_config = functools.partial(
+load_config_from_filename = functools.partial(
     cfgv.load_from_filename,
     schema=CONFIG_SCHEMA,
     load_strategy=yaml_load,
     exc_tp=InvalidConfigError,
 )
+
+
+def load_config(config_path: str) -> dict[str, Any]:
+    path = pathlib.Path(config_path)
+    if not path.exists():
+        raise InvalidConfigError(f"{path} does not exist")
+
+    if not path.is_dir():
+        return load_config_from_filename(path)
+
+    repos = []
+    for file in sorted(path.glob('*.yaml')):
+        file_config = load_config_from_filename(file)
+        repos.extend(file_config['repos'])
+
+    data = cfgv.apply_defaults({'repos': repos}, CONFIG_SCHEMA)
+
+    return data
